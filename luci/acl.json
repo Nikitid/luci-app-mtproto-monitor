@@ -1,0 +1,21 @@
+{
+	"luci-app-mtproto-monitor": {
+		"description": "Monitor local Telegram proxy instances",
+		"read": {
+			"file": {
+				"/usr/libexec/mtproto-monitor status": [ "exec" ],
+				"/usr/libexec/mtproto-monitor history": [ "exec" ],
+				"/usr/libexec/mtproto-monitor firewall-status": [ "exec" ]
+			}
+		},
+		"write": {
+			"file": {
+				"/usr/libexec/mtproto-monitor firewall-open *": [ "exec" ],
+				"/usr/libexec/mtproto-monitor firewall-close *": [ "exec" ]
+			},
+			"ubus": {
+				"file": [ "exec" ]
+			}
+		}
+	}
+}

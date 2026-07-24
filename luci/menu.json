@@ -1,0 +1,13 @@
+{
+	"admin/status/mtproto-monitor": {
+		"title": "MTProto Monitor",
+		"order": 75,
+		"action": {
+			"type": "view",
+			"path": "status/mtproto-monitor"
+		},
+		"depends": {
+			"acl": [ "luci-app-mtproto-monitor" ]
+		}
+	}
+}

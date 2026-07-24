@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.12"
+      - name: Verify and test
+        run: |
+          ./scripts/check-release-tag.sh "$GITHUB_REF_NAME"
+          ./scripts/ci-check.sh
+      - name: Install SDK dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            build-essential file gawk gettext libncurses-dev libssl-dev \
+            rsync unzip zlib1g-dev zstd
+      - name: Download verified OpenWrt SDK
+        run: |
+          . ./apk-feed.env
+          mkdir -p build
+          curl --fail --location --silent --show-error \
+            "https://downloads.openwrt.org/releases/${OPENWRT_APK_VERSION}/targets/${OPENWRT_APK_TARGET}/${OPENWRT_APK_SDK_ARCHIVE}" \
+            --output "build/${OPENWRT_APK_SDK_ARCHIVE}"
+          printf '%s  %s\n' "$OPENWRT_APK_SDK_SHA256" \
+            "build/${OPENWRT_APK_SDK_ARCHIVE}" | sha256sum --check
+          tar --use-compress-program=unzstd -xf \
+            "build/${OPENWRT_APK_SDK_ARCHIVE}" -C build
+      - name: Prepare signing key
+        env:
+          SIGNING_KEY: ${{ secrets.OPENWRT_APK_SIGNING_KEY }}
+        run: |
+          test -n "$SIGNING_KEY"
+          umask 077
+          printf '%s\n' "$SIGNING_KEY" >/tmp/mtproto-monitor-release-private.pem
+      - name: Build signed APK feed
+        run: |
+          . ./apk-feed.env
+          OPENWRT_SDK_DIR="$PWD/build/${OPENWRT_APK_SDK_ARCHIVE%.tar.zst}" \
+          OPENWRT_APK_SIGNING_KEY=/tmp/mtproto-monitor-release-private.pem \
+          OPENWRT_APK_RELEASE_TAG="$GITHUB_REF_NAME" \
+            ./scripts/build-apk-feed.sh
+      - name: Remove signing key
+        if: ${{ always() }}
+        run: rm -f /tmp/mtproto-monitor-release-private.pem
+      - name: Publish release
+        uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
+        with:
+          generate_release_notes: true
+          files: |
+            dist/*.ipk
+            dist/SHA256SUMS
+            dist/apk-feed/*
+      - name: Publish stable APK feed
+        run: |
+          channel_dir="$RUNNER_TEMP/mtproto-monitor-apk-feed"
+          if git ls-remote --exit-code --heads origin refs/heads/apk-feed >/dev/null; then
+            git fetch origin refs/heads/apk-feed:refs/remotes/origin/apk-feed
+            git worktree add -b apk-feed "$channel_dir" origin/apk-feed
+          else
+            git worktree add --detach "$channel_dir"
+            git -C "$channel_dir" switch --orphan apk-feed
+          fi
+          cp dist/apk-feed/packages.adb \
+            dist/apk-feed/mtproto-monitor-release.pem \
+            dist/apk-feed/*.apk "$channel_dir/"
+          git -C "$channel_dir" config user.name 'github-actions[bot]'
+          git -C "$channel_dir" config user.email \
+            '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C "$channel_dir" add packages.adb mtproto-monitor-release.pem '*.apk'
+          git -C "$channel_dir" commit -m "feed: ${GITHUB_REF_NAME}"
+          git -C "$channel_dir" push origin HEAD:apk-feed
