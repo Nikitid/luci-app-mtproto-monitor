@@ -32,11 +32,13 @@ resolve_section() {
   package="$1"
   selector="$2"
   case "$selector" in
-    @rule\[*\])
-      index="${selector#@rule[}"
+    @*\[*\])
+      type="${selector#@}"
+      type="${type%%[*}"
+      index="${selector#*[}"
       index="${index%]}"
-      awk -v package="$package" -v wanted="$index" '
-        $1 == "section" && $2 == package && $4 == "rule" {
+      awk -v package="$package" -v type="$type" -v wanted="$index" '
+        $1 == "section" && $2 == package && $4 == type {
           if (seen == wanted) { print $3; exit }
           seen++
         }
@@ -146,6 +148,8 @@ run_helper() {
     MOCK_UCI_STATE="$uci_state" \
     MOCK_FW4_FAIL_CHECK="$fail_check" \
     MOCK_FW4_FAIL_RELOAD="$fail_reload" \
+    MTPROTO_MONITOR_LOCK_ATTEMPTS="${LOCK_ATTEMPTS:-10}" \
+    MTPROTO_MONITOR_LOCK_WAIT=0 \
     "$root/runtime/mtproto-monitor.sh" "$@"
 }
 
@@ -213,5 +217,146 @@ fi
 grep -q 'pending UCI changes' "$tmp/pending.out"
 [ ! -s "$uci_state" ]
 rm -f "$uci_state.dirty"
+
+reset_state() {
+  cat >"$uci_state"
+  cp "$uci_state" "$uci_state.committed"
+  rm -f "$uci_state.dirty"
+}
+
+# firewall4 widens a rule when a field is unset: an absent proto means "tcpudp"
+# and an absent dest_port means every port. Both forms already reach the proxy
+# port from WAN, so both must read as open.
+reset_state <<'EOF'
+section firewall implicit_proto rule
+option firewall implicit_proto src wan
+option firewall implicit_proto dest_port 1443
+option firewall implicit_proto target ACCEPT
+EOF
+run_helper firewall-open 1443 | grep -q 'already open' || {
+  printf 'a rule without proto was not recognised as open\n' >&2
+  exit 1
+}
+run_helper firewall-status | grep -q '^port=1443 firewall=active'
+
+reset_state <<'EOF'
+section firewall implicit_ports rule
+option firewall implicit_ports src wan
+option firewall implicit_ports proto tcp
+option firewall implicit_ports target ACCEPT
+EOF
+run_helper firewall-open 1443 | grep -q 'already open' || {
+  printf 'a rule without dest_port was not recognised as open\n' >&2
+  exit 1
+}
+
+# firewall4 parse_protocol maps each of these onto TCP.
+for alias in tcp tcpudp all any 6 'tcp udp'; do
+  reset_state <<EOF
+section firewall alias_rule rule
+option firewall alias_rule src wan
+option firewall alias_rule proto $alias
+option firewall alias_rule dest_port 1443
+option firewall alias_rule target ACCEPT
+EOF
+  run_helper firewall-open 1443 | grep -q 'already open' || {
+    printf 'proto %s was not recognised as covering TCP\n' "$alias" >&2
+    exit 1
+  }
+done
+
+# A UDP-only rule leaves the TCP port closed and must not read as open.
+reset_state <<'EOF'
+section firewall udp_only rule
+option firewall udp_only src wan
+option firewall udp_only proto udp
+option firewall udp_only dest_port 1443
+option firewall udp_only target ACCEPT
+EOF
+run_helper firewall-status | grep -q '^port=1443 firewall=missing' || {
+  printf 'a UDP-only rule was reported as open TCP access\n' >&2
+  exit 1
+}
+
+# A widened rule is reported, but closing it still refuses to edit a rule that
+# is not an exact single-port TCP match.
+reset_state <<'EOF'
+section firewall implicit_proto rule
+option firewall implicit_proto src wan
+option firewall implicit_proto dest_port 1443
+option firewall implicit_proto target ACCEPT
+EOF
+before="$(sha256sum "$uci_state" | awk '{print $1}')"
+if run_helper firewall-close 1443 >"$tmp/implicit.out" 2>&1; then
+  printf 'a rule without explicit proto was edited automatically\n' >&2
+  exit 1
+fi
+grep -q 'refusing to modify it automatically' "$tmp/implicit.out"
+[ "$before" = "$(sha256sum "$uci_state" | awk '{print $1}')" ]
+
+# miniupnpd stops at the first perm_rule whose external range covers the port,
+# so a deny behind a broader allow reserves nothing.
+reset_state <<'EOF'
+section upnpd allow_high perm_rule
+option upnpd allow_high action allow
+option upnpd allow_high ext_ports 1024-65535
+section upnpd deny_mtproto perm_rule
+option upnpd deny_mtproto action deny
+option upnpd deny_mtproto ext_ports 1443
+EOF
+run_helper firewall-status | grep -q 'upnp=missing' || {
+  printf 'a deny shadowed by an earlier allow was reported as reserved\n' >&2
+  exit 1
+}
+
+reset_state <<'EOF'
+section upnpd deny_mtproto perm_rule
+option upnpd deny_mtproto action deny
+option upnpd deny_mtproto ext_ports 1443
+section upnpd allow_high perm_rule
+option upnpd allow_high action allow
+option upnpd allow_high ext_ports 1024-65535
+EOF
+run_helper firewall-status | grep -q 'upnp=active' || {
+  printf 'an effective UPnP reservation was not reported\n' >&2
+  exit 1
+}
+
+# A lock outlives a process killed before it could release it, and would
+# otherwise refuse every later firewall action until /tmp was cleared by hand.
+reset_state </dev/null
+mkdir -p "$tmp/state/firewall.lock"
+printf '999999\n' >"$tmp/state/firewall.lock/pid"
+run_helper firewall-open 1443 | grep -q 'WAN access opened' || {
+  printf 'a stale firewall lock was not reclaimed\n' >&2
+  exit 1
+}
+[ ! -e "$tmp/state/firewall.lock" ] || {
+  printf 'the firewall lock was not released\n' >&2
+  exit 1
+}
+
+# A lock a live process holds is still honoured.
+reset_state </dev/null
+mkdir -p "$tmp/proc/4242" "$tmp/state/firewall.lock"
+printf '4242\n' >"$tmp/state/firewall.lock/pid"
+if LOCK_ATTEMPTS=2 run_helper firewall-open 1443 >"$tmp/held.out" 2>&1; then
+  printf 'a lock held by a live process was ignored\n' >&2
+  exit 1
+fi
+grep -q 'still running' "$tmp/held.out"
+[ ! -s "$uci_state" ]
+rm -rf "$tmp/state/firewall.lock" "$tmp/proc/4242"
+
+# A reservation written as a range covers the port just as a single value does.
+reset_state <<'EOF'
+section upnpd deny_range perm_rule
+option upnpd deny_range action deny
+option upnpd deny_range ext_ports 1400-1500
+EOF
+run_helper firewall-status | grep -q 'upnp=active' || {
+  printf 'a ranged UPnP reservation was not recognised\n' >&2
+  exit 1
+}
 
 printf 'test-firewall OK\n'

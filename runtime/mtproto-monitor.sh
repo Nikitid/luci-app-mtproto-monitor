@@ -10,6 +10,8 @@ SAMPLE_INTERVAL="${MTPROTO_MONITOR_INTERVAL:-5}"
 HISTORY_LIMIT="${MTPROTO_MONITOR_HISTORY_LIMIT:-360}"
 UCI="${MTPROTO_MONITOR_UCI:-uci}"
 FW4="${MTPROTO_MONITOR_FW4:-fw4}"
+LOCK_ATTEMPTS="${MTPROTO_MONITOR_LOCK_ATTEMPTS:-10}"
+LOCK_WAIT="${MTPROTO_MONITOR_LOCK_WAIT:-1}"
 
 umask 077
 
@@ -115,6 +117,23 @@ socket_inodes() {
   done | sed -n 's/^socket:\[\([0-9][0-9]*\)\]$/\1/p' | sort -u
 }
 
+# A sample directory named only after the caller PID collides once that PID is
+# reused, and mkdir then fails the whole sample. Directories do leak: procd
+# sends SIGKILL when a package upgrade restarts the collector mid-sample, and
+# the EXIT trap never runs. Prune what no live process owns, and let mktemp
+# guarantee the name is free even when a leak is still present.
+prune_state() {
+  for entry in "$STATE_DIR"/status.* "$STATE_DIR"/snapshot.*; do
+    [ -e "$entry" ] || continue
+    owner="${entry##*/}"
+    owner="${owner#*.}"
+    owner="${owner%%.*}"
+    if ! is_number "$owner" || [ ! -d "$PROC_ROOT/$owner" ]; then
+      rm -rf "$entry"
+    fi
+  done
+}
+
 socket_metrics_file() {
   port="$1"
   inodes="$2"
@@ -196,6 +215,22 @@ port_spec_contains() {
   return 1
 }
 
+# firewall4 widens a rule when a field is unset: parse_rule defaults proto to
+# "tcpudp" and dest_port to any port, and parse_protocol maps all/any/*/6 onto
+# TCP as well. Requiring a literal " tcp " and a non-empty port list therefore
+# missed rules that do reach the proxy port from WAN, and the page reported
+# "WAN closed" for a port WAN could actually connect to.
+proto_covers_tcp() {
+  spec="$(printf '%s' "${1:-}" | tr 'A-Z' 'a-z')"
+  [ -n "$spec" ] || return 0
+  for token in $spec; do
+    case "$token" in
+      tcp | tcpudp | all | any | '*' | 6) return 0 ;;
+    esac
+  done
+  return 1
+}
+
 firewall_rule_matches() {
   index="$1"
   port="$2"
@@ -205,10 +240,12 @@ firewall_rule_matches() {
   dest_port="$("$UCI" -q get "firewall.@rule[$index].dest_port" || true)"
   target="$("$UCI" -q get "firewall.@rule[$index].target" || true)"
   enabled="$("$UCI" -q get "firewall.@rule[$index].enabled" || echo 1)"
-  [ "$src" = wan ] && [ "$target" = ACCEPT ] \
-    && { [ "$include_disabled" = 1 ] || [ "$enabled" != 0 ]; } \
-    && printf ' %s ' "$proto" | grep -q ' tcp ' \
-    && port_spec_contains "$port" "$dest_port"
+  [ "$src" = wan ] || return 1
+  [ "$target" = ACCEPT ] || return 1
+  [ "$include_disabled" = 1 ] || [ "$enabled" != 0 ] || return 1
+  proto_covers_tcp "$proto" || return 1
+  [ -z "$dest_port" ] || port_spec_contains "$port" "$dest_port" || return 1
+  return 0
 }
 
 firewall_rule_exists() {
@@ -221,13 +258,20 @@ firewall_rule_exists() {
   return 1
 }
 
+# miniupnpd applies perm_rules in order and the first rule whose external port
+# range covers the request decides. Searching the whole list for any deny
+# reported a reservation that an earlier allow had already overridden, and it
+# also missed a deny written as a range rather than a single port.
 upnp_reserved() {
   port="$1"
   index=0
   while "$UCI" -q get "upnpd.@perm_rule[$index]" >/dev/null 2>&1; do
     action="$("$UCI" -q get "upnpd.@perm_rule[$index].action" || true)"
     ports="$("$UCI" -q get "upnpd.@perm_rule[$index].ext_ports" || true)"
-    [ "$action" = deny ] && [ "$ports" = "$port" ] && return 0
+    if port_spec_contains "$port" "$ports"; then
+      [ "$action" = deny ] || return 1
+      return 0
+    fi
     index=$((index + 1))
   done
   return 1
@@ -251,8 +295,8 @@ port_is_detected() {
 
 sample_status() (
   mkdir -p "$STATE_DIR"
-  tmp_dir="$STATE_DIR/status.$$"
-  mkdir "$tmp_dir"
+  prune_state
+  tmp_dir="$(mktemp -d "$STATE_DIR/status.$$.XXXXXX")"
   trap 'rm -rf "$tmp_dir"' EXIT HUP INT TERM
 
   active_connections=0
@@ -368,7 +412,10 @@ collect() {
 }
 
 history() {
-  [ -r "$STATE_DIR/history.tsv" ] && cat "$STATE_DIR/history.tsv"
+  # An empty history is the normal state right after boot, not a failure: a
+  # non-zero exit here surfaces in LuCI as a failed helper call.
+  [ -r "$STATE_DIR/history.tsv" ] || return 0
+  cat "$STATE_DIR/history.tsv"
 }
 
 firewall_status() {
@@ -383,15 +430,25 @@ firewall_status() {
   [ "$found" = 1 ] || printf 'port=none firewall=missing upnp=missing\n'
 }
 
+# The lock records its holder. A process killed before it can release the lock
+# would otherwise leave the directory behind, and every later open or close
+# would refuse to run until /tmp was cleared by hand. procd does send SIGKILL,
+# so this is reachable whenever a package upgrade interrupts an action.
 acquire_firewall_lock() {
   lock="$STATE_DIR/firewall.lock"
   mkdir -p "$STATE_DIR"
   attempts=0
   while ! mkdir "$lock" 2>/dev/null; do
     attempts=$((attempts + 1))
-    [ "$attempts" -lt 10 ] || return 1
-    sleep 1
+    [ "$attempts" -le "$LOCK_ATTEMPTS" ] || return 1
+    owner="$(cat "$lock/pid" 2>/dev/null || true)"
+    if is_number "$owner" && [ -d "$PROC_ROOT/$owner" ]; then
+      sleep "$LOCK_WAIT"
+    else
+      rm -rf "$lock"
+    fi
   done
+  printf '%s\n' "$$" >"$lock/pid"
 }
 
 restore_firewall() {
@@ -432,9 +489,10 @@ firewall_open() (
     printf 'Another MTProto firewall action is still running.\n' >&2
     exit 1
   }
-  backup="$(mktemp)"
   lock="$STATE_DIR/firewall.lock"
-  trap 'rm -f "$backup"; rmdir "$lock" 2>/dev/null || true' EXIT HUP INT TERM
+  backup=""
+  trap 'rm -rf "$lock"; [ -z "$backup" ] || rm -f "$backup"' EXIT HUP INT TERM
+  backup="$(mktemp)"
   [ -z "$("$UCI" changes firewall 2>/dev/null)" ] || {
     printf 'Firewall has pending UCI changes; apply or revert them first.\n' >&2
     exit 1
@@ -488,9 +546,10 @@ firewall_close() (
     printf 'Another MTProto firewall action is still running.\n' >&2
     exit 1
   }
-  backup="$(mktemp)"
   lock="$STATE_DIR/firewall.lock"
-  trap 'rm -f "$backup"; rmdir "$lock" 2>/dev/null || true' EXIT HUP INT TERM
+  backup=""
+  trap 'rm -rf "$lock"; [ -z "$backup" ] || rm -f "$backup"' EXIT HUP INT TERM
+  backup="$(mktemp)"
   [ -z "$("$UCI" changes firewall 2>/dev/null)" ] || {
     printf 'Firewall has pending UCI changes; apply or revert them first.\n' >&2
     exit 1

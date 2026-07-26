@@ -19,17 +19,17 @@ jobs:
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.12"
-      - name: Verify and test
-        run: |
-          ./scripts/check-release-tag.sh "$GITHUB_REF_NAME"
-          ./scripts/ci-check.sh
-      - name: Install SDK dependencies
+      - name: Verify tag
+        run: ./scripts/check-release-tag.sh "$GITHUB_REF_NAME"
+      - name: Validate and build
+        run: ./scripts/ci-check.sh
+      - name: Install OpenWrt SDK build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends \
             build-essential file gawk gettext libncurses-dev libssl-dev \
             rsync unzip zlib1g-dev zstd
-      - name: Download verified OpenWrt SDK
+      - name: Download verified OpenWrt 25.12 SDK
         run: |
           . ./apk-feed.env
           mkdir -p build
@@ -40,47 +40,52 @@ jobs:
             "build/${OPENWRT_APK_SDK_ARCHIVE}" | sha256sum --check
           tar --use-compress-program=unzstd -xf \
             "build/${OPENWRT_APK_SDK_ARCHIVE}" -C build
-      - name: Prepare signing key
+      - name: Prepare APK release signing key
         env:
           SIGNING_KEY: ${{ secrets.OPENWRT_APK_SIGNING_KEY }}
         run: |
-          test -n "$SIGNING_KEY"
+          test -n "$SIGNING_KEY" || {
+            echo 'OPENWRT_APK_SIGNING_KEY is not configured' >&2
+            exit 1
+          }
           umask 077
-          printf '%s\n' "$SIGNING_KEY" >/tmp/mtproto-monitor-release-private.pem
-      - name: Build signed APK feed
+          printf '%s\n' "$SIGNING_KEY" >/tmp/mtproto-monitor-apk-release.pem
+      # Only this package is built and signed here. Nikitid/openwrt-feed
+      # collects the released APK and publishes the shared signed index, so a
+      # release never depends on a sibling application being ready.
+      - name: Build signed OpenWrt 25.12 APK
         run: |
           . ./apk-feed.env
           OPENWRT_SDK_DIR="$PWD/build/${OPENWRT_APK_SDK_ARCHIVE%.tar.zst}" \
-          OPENWRT_APK_SIGNING_KEY=/tmp/mtproto-monitor-release-private.pem \
-          OPENWRT_APK_RELEASE_TAG="$GITHUB_REF_NAME" \
-            ./scripts/build-apk-feed.sh
-      - name: Remove signing key
+          OPENWRT_APK_SIGNING_KEY=/tmp/mtproto-monitor-apk-release.pem \
+            ./scripts/build-apk.sh
+      - name: Remove APK release signing key
         if: ${{ always() }}
-        run: rm -f /tmp/mtproto-monitor-release-private.pem
-      - name: Publish release
+        run: rm -f /tmp/mtproto-monitor-apk-release.pem
+      - name: Publish release assets
         uses: softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b # v3.0.1
         with:
           generate_release_notes: true
           files: |
             dist/*.ipk
             dist/SHA256SUMS
-            dist/apk-feed/*
-      - name: Publish stable APK feed
+            dist/apk/*
+      # Best effort: the feed also rebuilds on a daily schedule and on manual
+      # dispatch, so a missing or expired token delays the index but never
+      # fails the release.
+      - name: Notify the shared feed
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.OPENWRT_FEED_DISPATCH_TOKEN }}
         run: |
-          channel_dir="$RUNNER_TEMP/mtproto-monitor-apk-feed"
-          if git ls-remote --exit-code --heads origin refs/heads/apk-feed >/dev/null; then
-            git fetch origin refs/heads/apk-feed:refs/remotes/origin/apk-feed
-            git worktree add -b apk-feed "$channel_dir" origin/apk-feed
-          else
-            git worktree add --detach "$channel_dir"
-            git -C "$channel_dir" switch --orphan apk-feed
+          . ./apk-feed.env
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo 'OPENWRT_FEED_DISPATCH_TOKEN is not configured;'
+            echo 'the feed will pick this release up on its next scheduled run.'
+            exit 0
           fi
-          cp dist/apk-feed/packages.adb \
-            dist/apk-feed/mtproto-monitor-release.pem \
-            dist/apk-feed/*.apk "$channel_dir/"
-          git -C "$channel_dir" config user.name 'github-actions[bot]'
-          git -C "$channel_dir" config user.email \
-            '41898282+github-actions[bot]@users.noreply.github.com'
-          git -C "$channel_dir" add packages.adb mtproto-monitor-release.pem '*.apk'
-          git -C "$channel_dir" commit -m "feed: ${GITHUB_REF_NAME}"
-          git -C "$channel_dir" push origin HEAD:apk-feed
+          gh api "repos/${OPENWRT_FEED_REPOSITORY}/dispatches" \
+            --method POST \
+            --field event_type=member-release \
+            --field "client_payload[repository]=${GITHUB_REPOSITORY}" \
+            --field "client_payload[tag]=${GITHUB_REF_NAME}"

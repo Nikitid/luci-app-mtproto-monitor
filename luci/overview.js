@@ -13,24 +13,24 @@ return baseclass.extend({
 	render: function(data) {
 		var snapshot = common.parse(data.stdout);
 		var state = snapshot.installed === 0 ?
-			common.pill(common.tr('Not installed', 'Не установлен'), 'neutral') :
+			common.pill(common.tr('Not installed'), 'neutral') :
 			snapshot.running === snapshot.installed && snapshot.listening === snapshot.running ?
-				common.pill(common.tr('Running', 'Работает'), 'good') :
-				common.pill(common.tr('Needs attention', 'Нужно внимание'), 'warn');
+				common.pill(common.tr('Running'), 'good') :
+				common.pill(common.tr('Needs attention'), 'warn');
 		return E('div', {}, [
 			common.styles(),
 			E('div', { 'class': 'mtproto-page' }, [
 				E('div', { 'class': 'mtproto-overview' }, [
 					E('div', { 'class': 'mtproto-overview-stat' }, [
-						E('span', {}, [ common.tr('Active clients', 'Активные клиенты') ]),
+						E('span', {}, [ common.tr('Active clients') ]),
 						E('b', {}, [ String(snapshot.clients) ])
 					]),
 					E('div', { 'class': 'mtproto-overview-stat' }, [
-						E('span', {}, [ common.tr('TCP connections', 'TCP-подключения') ]),
+						E('span', {}, [ common.tr('TCP connections') ]),
 						E('b', {}, [ String(snapshot.connections) ])
 					]),
 					E('div', { 'class': 'mtproto-overview-stat' }, [
-						E('span', {}, [ common.tr('Proxy status', 'Статус прокси') ]),
+						E('span', {}, [ common.tr('Proxy status') ]),
 						E('div', { 'style': 'margin-top:.35rem' }, [ state ])
 					])
 				]),
@@ -39,7 +39,7 @@ return baseclass.extend({
 						'class': 'mtproto-quick-link',
 						'href': L.url('admin', 'status', 'mtproto-monitor')
 					}, [
-						common.tr('Open detailed monitor', 'Открыть подробный монитор')
+						common.tr('Open detailed monitor')
 					])
 				])
 			])

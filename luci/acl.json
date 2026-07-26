@@ -6,6 +6,9 @@
 				"/usr/libexec/mtproto-monitor status": [ "exec" ],
 				"/usr/libexec/mtproto-monitor history": [ "exec" ],
 				"/usr/libexec/mtproto-monitor firewall-status": [ "exec" ]
+			},
+			"ubus": {
+				"file": [ "exec" ]
 			}
 		},
 		"write": {

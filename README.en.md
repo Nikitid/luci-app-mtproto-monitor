@@ -17,26 +17,37 @@ closed explicitly for each detected proxy port. Changes are validated with
 - official OpenWrt `25.12.x` with `apk`;
 - LuCI and firewall4/nftables.
 
-The signed APK feed is validated on OpenWrt `25.12.5`,
-`mediatek/filogic`, `aarch64_cortex-a53`.
+The package is a member of the shared signed feed
+[Nikitid/openwrt-feed](https://github.com/Nikitid/openwrt-feed) and is built for
+OpenWrt `25.12.5`, `mediatek/filogic`, `aarch64_cortex-a53`.
 
 ## Installation
-
-For OpenWrt 24.10, download the `*_all.ipk` package from
-[Releases](https://github.com/Nikitid/mtproto-monitor/releases) and install it
-through `System -> Software -> Upload Package`.
 
 For OpenWrt 25.12:
 
 ```sh
-wget -O /tmp/install-mtproto-monitor.sh \
-  https://github.com/Nikitid/mtproto-monitor/releases/latest/download/install-openwrt25.sh
-sh /tmp/install-mtproto-monitor.sh
+wget -O /tmp/nikitid-feed.sh \
+  https://raw.githubusercontent.com/Nikitid/openwrt-feed/feed/install.sh
+sh /tmp/nikitid-feed.sh luci-app-mtproto-monitor
 ```
 
-The installer verifies the release public key, configures the signed APK feed
-and simulates the package transaction before installation. Installation does
-not change firewall rules automatically.
+The installer verifies the publisher public key against a pinned checksum,
+configures one shared feed entry and installs only the packages it is given.
+Later updates use the same targeted call:
+
+```sh
+apk update
+apk upgrade luci-app-mtproto-monitor
+```
+
+Upgrading the whole router (`apk upgrade` with no package name) is neither
+required nor intended.
+
+For OpenWrt 24.10, download the `*_all.ipk` package from
+[Releases](https://github.com/Nikitid/luci-mtproto/releases) and install it
+through `System -> Software -> Upload Package`.
+
+Installation does not change firewall rules automatically.
 
 Open `Status -> Overview` or `Status -> MTProto Monitor` after installation.
 

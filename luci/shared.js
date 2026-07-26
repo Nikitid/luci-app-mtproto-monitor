@@ -1,13 +1,19 @@
 'use strict';
 'require baseclass';
 
-function russian() {
-	var language = (document.documentElement.lang || navigator.language || '').toLowerCase();
-	return language.indexOf('ru') === 0;
-}
+/* Translations come from the bundled gettext catalogues in
+ * /usr/lib/lua/luci/i18n, looked up through LuCI's own _() in cbi.js.
+ *
+ * Every key carries this context. LuCI merges every installed catalogue into
+ * one window.TR table keyed by a hash of the string, in an unspecified order,
+ * so a msgid shared with another catalogue either loses to it or silently
+ * takes it over. "Connections" already collides that way: luci-base
+ * translates it as "Соединения" while this page means "Подключения". A
+ * context makes each key ours alone and keeps the collision impossible. */
+var CONTEXT = 'mtproto-monitor';
 
-function tr(en, ru) {
-	return russian() ? ru : en;
+function tr(text) {
+	return _(text, CONTEXT);
 }
 
 function parse(stdout) {
@@ -218,6 +224,8 @@ function styles() {
 			font-size: .82rem;
 		}
 		.mtproto-legend b { color: inherit; }
+		.mtproto-legend b.clients { color: var(--mtp-accent); }
+		.mtproto-legend b.connections { color: var(--mtp-accent-2); }
 		.mtproto-table { width: 100%; border-collapse: collapse; }
 		.mtproto-table th, .mtproto-table td {
 			padding: .65rem .45rem;

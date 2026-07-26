@@ -1,0 +1,186 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8\n"
+
+msgctxt "mtproto-monitor"
+msgid "Active TCP connections"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Active clients"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Activity"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Allow new TCP connections from WAN to port %d for %s?"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Applying firewall settings…"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Applying…"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Block new TCP connections from WAN to port %d for %s? Existing sessions may continue until they disconnect."
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Cancel"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Client and connection history"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Clients"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Clients now"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Close WAN access"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Close proxy port"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Connections"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Connections now"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Established inbound TCP"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Healthy"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Implementation"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Last 30 minutes; refreshes every 5 seconds."
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Needs attention"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "No supported proxy installation detected."
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Not installed"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Not listening"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Open WAN access"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Open detailed monitor"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Open proxy port"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Open · UPnP conflict"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Package Go, legacy Go/SOCKS5 and Rust layouts are detected automatically."
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Port"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Protocol"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Proxy instances"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Proxy status"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Running"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Sanitized aggregate history; client addresses are never stored."
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Status"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Stopped"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "TCP connections"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Unable to change WAN access."
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Unique active addresses"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Unique active clients"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "Unique active clients are deduplicated by remote network address. Connection count remains a secondary transport metric."
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "WAN access"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "WAN access closed."
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "WAN access opened."
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "WAN closed"
+msgstr ""
+
+msgctxt "mtproto-monitor"
+msgid "WAN open"
+msgstr ""

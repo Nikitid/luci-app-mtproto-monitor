@@ -1,0 +1,189 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ru\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+msgctxt "mtproto-monitor"
+msgid "Active TCP connections"
+msgstr "Активные TCP-подключения"
+
+msgctxt "mtproto-monitor"
+msgid "Active clients"
+msgstr "Активные клиенты"
+
+msgctxt "mtproto-monitor"
+msgid "Activity"
+msgstr "Активность"
+
+msgctxt "mtproto-monitor"
+msgid "Allow new TCP connections from WAN to port %d for %s?"
+msgstr "Разрешить новые TCP-подключения из WAN к порту %d для %s?"
+
+msgctxt "mtproto-monitor"
+msgid "Applying firewall settings…"
+msgstr "Применяю настройки firewall…"
+
+msgctxt "mtproto-monitor"
+msgid "Applying…"
+msgstr "Применяю…"
+
+msgctxt "mtproto-monitor"
+msgid "Block new TCP connections from WAN to port %d for %s? Existing sessions may continue until they disconnect."
+msgstr "Запретить новые TCP-подключения из WAN к порту %d для %s? Уже установленные сессии могут работать до отключения."
+
+msgctxt "mtproto-monitor"
+msgid "Cancel"
+msgstr "Отмена"
+
+msgctxt "mtproto-monitor"
+msgid "Client and connection history"
+msgstr "История клиентов и подключений"
+
+msgctxt "mtproto-monitor"
+msgid "Clients"
+msgstr "Клиенты"
+
+msgctxt "mtproto-monitor"
+msgid "Clients now"
+msgstr "Клиенты сейчас"
+
+msgctxt "mtproto-monitor"
+msgid "Close WAN access"
+msgstr "Закрыть доступ из WAN"
+
+msgctxt "mtproto-monitor"
+msgid "Close proxy port"
+msgstr "Закрыть порт прокси"
+
+msgctxt "mtproto-monitor"
+msgid "Connections"
+msgstr "Подключения"
+
+msgctxt "mtproto-monitor"
+msgid "Connections now"
+msgstr "Подключения сейчас"
+
+msgctxt "mtproto-monitor"
+msgid "Established inbound TCP"
+msgstr "Входящие TCP в состоянии established"
+
+msgctxt "mtproto-monitor"
+msgid "Healthy"
+msgstr "В норме"
+
+msgctxt "mtproto-monitor"
+msgid "Implementation"
+msgstr "Реализация"
+
+msgctxt "mtproto-monitor"
+msgid "Last 30 minutes; refreshes every 5 seconds."
+msgstr "Последние 30 минут; обновление каждые 5 секунд."
+
+msgctxt "mtproto-monitor"
+msgid "Needs attention"
+msgstr "Нужно внимание"
+
+msgctxt "mtproto-monitor"
+msgid "No supported proxy installation detected."
+msgstr "Поддерживаемый прокси не найден."
+
+msgctxt "mtproto-monitor"
+msgid "Not installed"
+msgstr "Не установлен"
+
+msgctxt "mtproto-monitor"
+msgid "Not listening"
+msgstr "Порт не слушается"
+
+msgctxt "mtproto-monitor"
+msgid "Open WAN access"
+msgstr "Открыть доступ из WAN"
+
+msgctxt "mtproto-monitor"
+msgid "Open detailed monitor"
+msgstr "Открыть подробный монитор"
+
+msgctxt "mtproto-monitor"
+msgid "Open proxy port"
+msgstr "Открыть порт прокси"
+
+msgctxt "mtproto-monitor"
+msgid "Open · UPnP conflict"
+msgstr "Открыт · конфликт UPnP"
+
+msgctxt "mtproto-monitor"
+msgid "Package Go, legacy Go/SOCKS5 and Rust layouts are detected automatically."
+msgstr "Пакетный Go, старый Go/SOCKS5 и Rust определяются автоматически."
+
+msgctxt "mtproto-monitor"
+msgid "Port"
+msgstr "Порт"
+
+msgctxt "mtproto-monitor"
+msgid "Protocol"
+msgstr "Протокол"
+
+msgctxt "mtproto-monitor"
+msgid "Proxy instances"
+msgstr "Экземпляры прокси"
+
+msgctxt "mtproto-monitor"
+msgid "Proxy status"
+msgstr "Статус прокси"
+
+msgctxt "mtproto-monitor"
+msgid "Running"
+msgstr "Работает"
+
+msgctxt "mtproto-monitor"
+msgid "Sanitized aggregate history; client addresses are never stored."
+msgstr "Обезличенная история; адреса клиентов не сохраняются."
+
+msgctxt "mtproto-monitor"
+msgid "Status"
+msgstr "Статус"
+
+msgctxt "mtproto-monitor"
+msgid "Stopped"
+msgstr "Остановлен"
+
+msgctxt "mtproto-monitor"
+msgid "TCP connections"
+msgstr "TCP-подключения"
+
+msgctxt "mtproto-monitor"
+msgid "Unable to change WAN access."
+msgstr "Не удалось изменить доступ из WAN."
+
+msgctxt "mtproto-monitor"
+msgid "Unique active addresses"
+msgstr "Уникальные активные адреса"
+
+msgctxt "mtproto-monitor"
+msgid "Unique active clients"
+msgstr "Уникальные активные клиенты"
+
+msgctxt "mtproto-monitor"
+msgid "Unique active clients are deduplicated by remote network address. Connection count remains a secondary transport metric."
+msgstr "Активные клиенты считаются по уникальным удалённым сетевым адресам. Число подключений остаётся вторичной транспортной метрикой."
+
+msgctxt "mtproto-monitor"
+msgid "WAN access"
+msgstr "Доступ из WAN"
+
+msgctxt "mtproto-monitor"
+msgid "WAN access closed."
+msgstr "Доступ из WAN закрыт."
+
+msgctxt "mtproto-monitor"
+msgid "WAN access opened."
+msgstr "Доступ из WAN открыт."
+
+msgctxt "mtproto-monitor"
+msgid "WAN closed"
+msgstr "WAN закрыт"
+
+msgctxt "mtproto-monitor"
+msgid "WAN open"
+msgstr "WAN открыт"

@@ -2,7 +2,7 @@
 
 [English](README.en.md)
 
-[![CI](https://github.com/Nikitid/mtproto-monitor/actions/workflows/ci.yml/badge.svg)](https://github.com/Nikitid/mtproto-monitor/actions/workflows/ci.yml)
+[![CI](https://github.com/Nikitid/luci-mtproto/actions/workflows/ci.yml/badge.svg)](https://github.com/Nikitid/luci-mtproto/actions/workflows/ci.yml)
 [![Лицензия: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Небольшое LuCI-приложение для локальных Telegram-прокси. Показывает активных
@@ -20,32 +20,37 @@
 - официальный OpenWrt `25.12.x` с `apk`;
 - LuCI и firewall4/nftables.
 
-Подписанный APK-feed проверен для OpenWrt `25.12.5`, `mediatek/filogic`,
-`aarch64_cortex-a53`.
+Пакет входит в общий подписанный фид
+[Nikitid/openwrt-feed](https://github.com/Nikitid/openwrt-feed) и собирается
+для OpenWrt `25.12.5`, `mediatek/filogic`, `aarch64_cortex-a53`.
 
 ## Установка
-
-### OpenWrt 24.10
-
-Скачайте `luci-app-mtproto-monitor_*_all.ipk` из
-[Releases](https://github.com/Nikitid/mtproto-monitor/releases) и установите
-через `System -> Software -> Upload Package`.
 
 ### OpenWrt 25.12
 
 ```sh
-wget -O /tmp/install-mtproto-monitor.sh \
-  https://github.com/Nikitid/mtproto-monitor/releases/latest/download/install-openwrt25.sh
-sh /tmp/install-mtproto-monitor.sh
+wget -O /tmp/nikitid-feed.sh \
+  https://raw.githubusercontent.com/Nikitid/openwrt-feed/feed/install.sh
+sh /tmp/nikitid-feed.sh luci-app-mtproto-monitor
 ```
 
-Установщик проверяет публичный ключ релиза, подключает подписанный APK-feed и
-проверяет транзакцию перед установкой. Последующие обновления:
+Установщик проверяет публичный ключ издателя по закреплённой контрольной сумме,
+подключает один общий фид и устанавливает только названные пакеты. Последующие
+обновления — тем же адресным вызовом:
 
 ```sh
 apk update
 apk upgrade luci-app-mtproto-monitor
 ```
+
+Обновление всего роутера (`apk upgrade` без имени пакета) не требуется и не
+предполагается.
+
+### OpenWrt 24.10
+
+Скачайте `luci-app-mtproto-monitor_*_all.ipk` из
+[Releases](https://github.com/Nikitid/luci-mtproto/releases) и установите
+через `System -> Software -> Upload Package`.
 
 После установки откройте `Status -> Overview` или
 `Status -> MTProto Monitor`. Установка не меняет firewall автоматически.
