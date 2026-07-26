@@ -1,6 +1,10 @@
 .DS_Store
 build/
 dist/
+# Notes about a specific installation: hosts, deployed versions, local paths.
+# The repository is public; only documentation about the package itself is
+# tracked. See docs/OPERATIONS.md, "Scope of this document".
+docs/local/
 *.apk
 *.ipk
 *.key

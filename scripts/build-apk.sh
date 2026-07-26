@@ -59,6 +59,7 @@ rsync -a --delete \
   --exclude build \
   --exclude dist \
   --exclude .DS_Store \
+  --exclude docs/local \
   "$root/" "$sdk_package/"
 
 make -C "$sdk" defconfig

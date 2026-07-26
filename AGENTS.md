@@ -6,6 +6,18 @@ This repository contains an OpenWrt LuCI status application and its small
 runtime collector. Keep monitoring read-only except for explicit per-port
 firewall actions.
 
+`docs/ARCHITECTURE.md` covers the state model, the firewall and UPnP
+semantics, the localisation invariants and why the two packaging paths must
+agree. `docs/OPERATIONS.md` covers releasing, the shared feed and the manual
+verification recipes. Read both before changing the collector, the firewall
+actions or the catalogues; several of the rules there are not derivable from
+the code.
+
+The repository is public, so tracked documentation describes the package only.
+Anything tied to a particular installation — host names, deployed versions,
+local paths, pending fleet work — goes in `docs/local/`, which is untracked.
+Check whether it exists before assuming a router is running the latest build.
+
 ## Working rules
 
 - Preserve OpenWrt 24.10 and 25.12 compatibility.
