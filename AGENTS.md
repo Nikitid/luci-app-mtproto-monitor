@@ -1,5 +1,14 @@
 # Repository Guidelines
 
+## Start of Work
+
+- Read `docs/MAP.md` to find the files a task touches.
+- Read the sibling OpenWrt repositories' `docs/TRAPS.md` before changing LuCI
+  code: the resource-cache, ACL-path and CSS-specificity traps recorded there
+  apply here too.
+- Run `git status -sb` and preserve unrelated changes.
+
+
 ## Scope
 
 This repository contains an OpenWrt LuCI status application and its small

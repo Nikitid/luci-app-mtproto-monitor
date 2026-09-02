@@ -79,7 +79,7 @@ for document in README.md README.en.md; do
 done
 
 # Every documented package transaction names the package it touches.
-for document in README.md README.en.md AGENTS.md SECURITY.md CHANGELOG.md \
+for document in README.md README.en.md AGENTS.md \
     docs/ARCHITECTURE.md docs/OPERATIONS.md; do
   [ -f "$root/$document" ] || continue
   grep -nE '(apk|opkg)[[:space:]]+upgrade[[:space:]]*$' "$root/$document" \

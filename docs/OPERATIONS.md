@@ -8,7 +8,6 @@ supported target rather than inferred.
 
 1. Bump the version in **both** `release.env` and `Makefile`.
    `scripts/check-version-sync.sh` fails if they drift.
-2. Add a `CHANGELOG.md` entry.
 3. Run `./scripts/ci-check.sh`.
 4. Tag `v<version>` exactly. `scripts/check-release-tag.sh` compares the tag
    against `PKG_VERSION`, so a mismatch fails the release rather than
