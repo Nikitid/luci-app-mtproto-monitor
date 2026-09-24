@@ -73,13 +73,13 @@ for gone in build-apk-feed.sh install-openwrt25.sh test-apk-bootstrap.sh; do
 done
 
 # Routers bootstrap through the shared installer only.
-for document in README.md README.en.md; do
+for document in README.md README.ru.md; do
   grep -Fq "$OPENWRT_FEED_INSTALLER" "$root/$document" \
     || fail "$document does not point at the shared installer"
 done
 
 # Every documented package transaction names the package it touches.
-for document in README.md README.en.md AGENTS.md \
+for document in README.md README.ru.md \
     docs/ARCHITECTURE.md docs/OPERATIONS.md; do
   [ -f "$root/$document" ] || continue
   grep -nE '(apk|opkg)[[:space:]]+upgrade[[:space:]]*$' "$root/$document" \

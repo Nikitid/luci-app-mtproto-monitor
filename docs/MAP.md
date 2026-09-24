@@ -37,9 +37,8 @@ and translation tests.
 
 | file | for |
 | --- | --- |
-| `AGENTS.md` | the rules of working here |
 | `docs/MAP.md` | this file |
 | `docs/ARCHITECTURE.md` | how the monitor and the firewall control work |
 | `docs/OPERATIONS.md` | installing and releasing |
-| `README.md` | operator-facing, Russian |
-| `README.en.md` | the English version |
+| `README.md` | user-facing, English |
+| `README.ru.md` | the Russian version |

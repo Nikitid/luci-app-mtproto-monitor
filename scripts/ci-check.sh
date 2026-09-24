@@ -6,6 +6,7 @@ root="$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)"
 cd "$root"
 
 ./scripts/check-version-sync.sh
+./scripts/check-readme.sh
 ./scripts/check-public-tree.sh
 ./scripts/check-apk-feed.sh
 ./scripts/check-packaging-parity.sh
