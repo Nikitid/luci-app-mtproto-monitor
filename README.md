@@ -9,6 +9,8 @@
 The `luci-app-mtproto-monitor` package is a small LuCI application for watching
 local Telegram proxies and controlling their WAN exposure.
 
+![MTProto Monitor page](docs/images/monitor.png)
+
 ## Features
 
 - active clients, TCP connections, 30-minute history and the health of each
