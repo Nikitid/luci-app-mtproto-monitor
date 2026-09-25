@@ -56,7 +56,7 @@ Depends: luci-base, rpcd-mod-file, firewall4
 Section: luci
 Architecture: $PKG_ARCH
 Maintainer: nikitid
-Homepage: https://github.com/Nikitid/luci-mtproto
+Homepage: https://github.com/Nikitid/luci-app-mtproto-monitor
 Description: MTProto Monitor for OpenWrt
  LuCI status page and Overview widget for active Telegram proxy clients and
  connections. Supports package Go, legacy Go/SOCKS5 and Rust layouts.

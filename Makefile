@@ -16,7 +16,7 @@ define Package/luci-app-mtproto-monitor
   CATEGORY:=LuCI
   SUBMENU:=2. Modules
   TITLE:=MTProto Monitor for OpenWrt
-  URL:=https://github.com/Nikitid/luci-mtproto
+  URL:=https://github.com/Nikitid/luci-app-mtproto-monitor
   DEPENDS:=+luci-base +rpcd-mod-file +firewall4
 endef
 

@@ -31,7 +31,7 @@ name starts with the package name. `SHA256SUMS.apk` is safe; a file such as
 ## Shared feed
 
 The package is a member of `Nikitid/openwrt-feed`. The contract is
-`docs/MEMBER_INTEGRATION.md` there; `Nikitid/ikev2-openwrt` is the reference
+`docs/MEMBER_INTEGRATION.md` there; `Nikitid/luci-app-ikev2-manager` is the reference
 implementation.
 
 - One publisher key, `keys/nikitid-openwrt-release.pem`. Its private half is
